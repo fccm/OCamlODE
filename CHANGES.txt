@@ -1,4 +1,7 @@
+ocamlode-0.5-r2
+- Original package from Richard Jones.
 
+ocamlode-0.5-r4
 - 2 bugs corrected
 - possible to wrap an ODE compiled with dSINGLE or dDOUBLE
 - added missing functions and up-dated to the last version of ODE
@@ -8,3 +11,6 @@
 - added some demos from the ODE sources converted from C to OCaml
 - generating ode_version.h for versioning
 
+ocamlode-0.6
+- 1 bugs corrected in ode_c.c in the function ocamlode_dPlaneSpace()
+- 1 correction in the demo file demo_I.ml

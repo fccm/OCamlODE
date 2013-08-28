@@ -2365,7 +2365,7 @@ ocamlode_dConnectingJointList (value b1, value b2)
   CAMLparam2 (b1, b2);
   CAMLlocal1 (rv);
 
-  dJointID* jlist;
+  dJointID* jlist = NULL;
   int i;
   int n = dConnectingJointList (dBodyID_val (b1), dBodyID_val (b2), jlist);
 
@@ -4308,7 +4308,7 @@ CAMLprim value
 ocamlode_dPlaneSpace (value nv)
 {
 #if defined(MEM_CPY) // dSINGLE
-  CAMLparam1 (n);
+  CAMLparam1 (nv);
   CAMLlocal1 (rv);
   dVector3 n, p, q;
   dVector3_val (nv, n);
@@ -4408,9 +4408,9 @@ ocamlode_dMultiply0 (value Bv, value Cv, value pv, value qv, value rv)
 {
   CAMLparam5 (Bv, Cv, pv, qv, rv);
   CAMLlocal1 (fv);
-  int p = Int_val(pv);
-  int q = Int_val(qv);
-  int r = Int_val(rv);
+  int p = Int_val(pv); // 3
+  int q = Int_val(qv); // 3
+  int r = Int_val(rv); // 1
   dReal *A;
   A = malloc (p*r * sizeof(dReal));
 #if defined(MEM_CPY) // dSINGLE
@@ -4418,7 +4418,7 @@ ocamlode_dMultiply0 (value Bv, value Cv, value pv, value qv, value rv)
   dReal *B, *C;
 
   len = Wosize_val(Bv) / Double_wosize;
-  assert (len == (p*q));
+  //assert (len == (p*q));
   B = malloc (len * sizeof(dReal));
   for (i=0; i < len; ++i)
   {
@@ -4426,7 +4426,7 @@ ocamlode_dMultiply0 (value Bv, value Cv, value pv, value qv, value rv)
   }
 
   len = Wosize_val(Cv) / Double_wosize;
-  assert (len == (q*r));
+  //assert (len == (q*r));
   C = malloc (len * sizeof(dReal));
   for (i=0; i < len; ++i)
   {

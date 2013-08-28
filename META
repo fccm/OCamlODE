@@ -1,5 +1,5 @@
 name="ocamlode"
-version="0.5-r4"
+version="0.6"
 description="OCaml bindings for the Open Dynamics Engine (ODE)."
 requires=""
 archive(byte) = "ode.cma"

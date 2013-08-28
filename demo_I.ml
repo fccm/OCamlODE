@@ -236,10 +236,11 @@ let reset_test() =
   dBodySetQuaternion !<test_body qrot;
   let rot = dQtoR qrot in
   for i=0 to pred num do
-    let v = dMultiply0_331 rot q.(i) in
-    dBodySetPosition _particle.(i) (pos1.(0) +. v.x)
-                                   (pos1.(1) +. v.y)
-                                   (pos1.(2) +. v.z);
+    let v = dMultiply0 rot q.(i) 3 3 1 in
+
+    dBodySetPosition _particle.(i) (pos1.(0) +. v.(0))
+                                   (pos1.(1) +. v.(1))
+                                   (pos1.(2) +. v.(2));
   done;
 
   (* set random torque *)

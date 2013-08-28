@@ -134,7 +134,7 @@ uninstall_findlib:  $(DIST_FILES)  $(SO_DIST_FILES) META
 
 # tar-ball
 
-VERSION=0.5-r4
+VERSION=0.6
 R_DIR=ocamlode-$(VERSION)
 TARBALL=$(R_DIR).tar.gz
 

@@ -36,19 +36,6 @@ or dSINGLE. But if you compile with dDOUBLE, there is opportunity to
 use OCaml structures which are binary-compatible with ODE structures,
 which speeds datas exchange.
 
-There is no support for attaching arbitrary data to objects (as is
-supported by ODE).  There are two reasons for this.  Firstly it would
-be unsafe if allowed generally.  Consider the case where you add a
-type t1 to an object, but then fetch it as type t2.  It is possible to
-work around this in the type system, but only if every type of object
-has the same, fixed extension type.  This would be quite limiting.
-Secondly it leads to a memory leak.  Consider the case where you
-attach an object to a geom contained within a space.  To implement
-this you have to call caml_register_global_root on the attached
-object.  When the space is freed, the geom gets freed too.  However
-there is no way to catch the cleanup and unregister the global root.
-Leaked global roots have a serious impact on performance too.
-
 Debugging
 ---------
 

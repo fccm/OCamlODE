@@ -728,6 +728,8 @@ let main () =
   let surface = Sdlvideo.set_video_mode ~w:width ~h:height ~bpp:32 [`OPENGL] in
   ignore(surface);
 
+  dInitODE();
+
   (* Create the ODE world. *)
   let ode = dWorldCreate () in
   dWorldSetGravity ode ~x:0. ~y:0. ~z:(-9.81);
