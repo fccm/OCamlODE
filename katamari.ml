@@ -102,7 +102,8 @@ let timer_start, timer_stop =
 	  printf "%s: %g seconds\n" label (now -. start);
 	  timer := None
   in
-  timer_start, timer_stop
+  (timer_start, timer_stop)
+;;
 
 let create_katamari ode space =
   let body = dBodyCreate ode in
@@ -115,7 +116,8 @@ let create_katamari ode space =
   dGeomSetBody kata (Some body);
   let x, y, z = initial in
   dGeomSetPosition kata ~x ~y ~z;
-  kata, body
+  (kata, body)
+;;
 
 type enabled_box = {
   b_box : box;

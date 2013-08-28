@@ -1,0 +1,10 @@
+
+- 2 bugs corrected
+- possible to wrap an ODE compiled with dSINGLE or dDOUBLE
+- added missing functions and up-dated to the last version of ODE
+- a new makefile that does not require extra dependencies
+  (the original one requires extlib, findlib, lablgl, sdl)
+- type constraint for each kind of geometry
+- added some demos from the ODE sources converted from C to OCaml
+- generating ode_version.h for versioning
+

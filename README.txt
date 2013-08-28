@@ -1,8 +1,25 @@
 OCaml bindings for the Open Dynamics Engine (ODE).
 Copyright (C) 2005 Richard W.M. Jones <rich@annexia.org>
+Copyright (C) 2008 Florent Monnier
+Current Maintainer : Florent Monnier <fmonnier@linux-nantes.org>
 
 This is a set of bindings in OCaml for the Open Dynamics Engine (ODE;
 http://www.ode.org/).
+
+License
+-------
+
+This library is distributed under the GNU Library General Public
+License with the special OCaml linking exception.
+The Katamari like game is licensed under the GNU GPL.
+Most of the demos that come from the ODE sources can be used either
+along the terms of the GNU LGPL or the BSD license.
+
+Impatients
+----------
+
+For impatients, just run the script demo_exec.sh, it will compile
+everything and will execute the demos.
 
 Notes on the style of bindings
 ------------------------------
@@ -14,10 +31,10 @@ destroy ODE objects by hand.  It is intended that someone would write
 a pleasant modular / object-oriented wrapper around these basic
 bindings which would use finalisers to support garbage collection.
 
-The ODE library must have been compiled with dDOUBLE so it uses
-double-precision floats throughout.  This is because for speed we use
-OCaml structures which are designed to be binary-compatible with ODE
-structures.
+The bindings can adapt itself to an ODE library compiled with dDOUBLE
+or dSINGLE. But if you compile with dDOUBLE, there is opportunity to
+use OCaml structures which are binary-compatible with ODE structures,
+which speeds datas exchange.
 
 There is no support for attaching arbitrary data to objects (as is
 supported by ODE).  There are two reasons for this.  Firstly it would

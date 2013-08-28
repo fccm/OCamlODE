@@ -1,104 +1,177 @@
-# OCaml bindings for the Open Dynamics Engine (ODE)
-# By Richard W.M. Jones <rich@annexia.org>
-# $Id: Makefile,v 1.2 2005/06/26 10:10:09 rich Exp $
+#  This file is a build script for the ocaml-ode bindings.
+#  Copyright (C) 2008 Florent Monnier <fmonnier@linux-nantes.org>          
+#
+#  This Makefile is free software: you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation, either version 3
+#  of the License, or (at your option) any later version.
+#
+#  This Makefile is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public
+#  License along with this Makefile.  If not, see:
+#  <http://www.gnu.org/licenses/>
 
-PACKAGE := ocamlode
-VERSION := 0.5-r2
+OCAMLC := ocamlc.opt
+OCAMLOPT := ocamlopt.opt
+OCAMLDOC := ocamldoc.opt
 
-OCAMLPACKAGES	:= sdl,unix,lablgl,lablgl.glut,extlib
-OCAMLCFLAGS	:= -g
-OCAMLOPTFLAGS	:=
+all: ode.cma ode.cmxa
+all: ode.cma
 
-OCAMLMKLIB	:= ocamlmklib
-OCAMLDEP	:= ocamldep
+.PHONY: all dist doc uninstall clean clean-doc
 
-EXTRA_CFLAGS := -O2
+#ode_version.exe: ode_version.c 
+#        # .exe for cygwin and mingw users
+#	gcc $< -o $@
+#ode_version.h: ode_version.exe
+## if the version can't be parsed automaticaly, ask to the user
+#	./$< > $@  ||  ocaml ask_version.ml $@
 
-CC	:= gcc
-CFLAGS	:= -g -fPIC -Wall -Wno-unused $(EXTRA_CFLAGS)
-LIBODE	:= -lode
+# another way to get ODE's version (maybe this one is more portable)
+ODE_MAJOR := $(shell ocaml ode_version.ml -major)
+ODE_MINOR := $(shell ocaml ode_version.ml -minor)
+ODE_MICRO := $(shell ocaml ode_version.ml -micro)
 
-all: ocamlode.cma ocamlode.cmxa katamari.opt
+MAJOR_VERSION := ODE_VERSION_MAJOR=$(ODE_MAJOR)
+MINOR_VERSION := ODE_VERSION_MINOR=$(ODE_MINOR)
+MICRO_VERSION := ODE_VERSION_MICRO=$(ODE_MICRO)
 
-ocamlode.cma: ode.cmo ode_c.o
-	$(OCAMLMKLIB) -o ocamlode $(LIBODE) $^
-ocamlode.cmxa: ode.cmx ode_c.o
-	$(OCAMLMKLIB) -o ocamlode $(LIBODE) $^
+ode_c.o: ode_c.c 
+#        ode_version.h
+	$(OCAMLC) -c -pp 'cpp -D$(MAJOR_VERSION) -D$(MINOR_VERSION) -D$(MICRO_VERSION)' $<
 
-katamari.opt: ocamlode.cmxa katamari.cmx
-	ocamlfind ocamlopt $(OCAMLOPTFLAGS) \
-	-package $(OCAMLPACKAGES) -cclib -L. -linkpkg $^ -o $@
+# still another way to get the proper version macros
+#	$(OCAMLC) -c -pp 'cpp $(shell sh ode_version.sh)' $<
 
-# Build libraries and example with gprof profiling included.
-profile: ocamlode_p.cmxa katamari_p.opt
+dll_mlode_stubs.so: ode_c.o
+	ocamlmklib -o  _mlode_stubs  $<  \
+	    `ode-config --libs`
 
-ocamlode_p.cmxa: .profile/ode.cmx .profile/ode_c.o
-	$(OCAMLMKLIB) -ccopt -p -ldopt -pg -o ocamlode_p $(LIBODE) $^
-.profile/ode.cmx: ode.ml
-	ocamlfind ocamlopt -p $(OCAMLOPTFLAGS) -package $(OCAMLPACKAGES) \
-	-c $< -o $@
-.profile/ode_c.o: ode_c.c
-	$(CC) $(CFLAGS) -pg -c $< -o $@
+ode.mli: ode.ml
+	$(OCAMLC) -i $< > $@
 
-katamari_p.opt: ocamlode_p.cmxa .profile/katamari.cmx
-	ocamlfind ocamlopt -p $(OCAMLOPTFLAGS) \
-	-package $(OCAMLPACKAGES) -cclib -L. -linkpkg $^ -o $@
-.profile/katamari.cmx: katamari.ml
-	ocamlfind ocamlopt -p $(OCAMLOPTFLAGS) -package $(OCAMLPACKAGES) \
-	-c $< -o $@
+ode.cmi: ode.mli
+	$(OCAMLC) -c $<
 
-# Make clean.
+ode.cmo: ode.ml ode.cmi
+	$(OCAMLC) -c $<
 
-CLEANFILES := core *.bak *~ *.cmi *.cmo *.cma *.a *.o *.cmx *.cmxa *.so *.opt
+ode.cma:  ode.cmo  dll_mlode_stubs.so
+	$(OCAMLC) -a  -custom  -o $@  $<  \
+	    -dllib dll_mlode_stubs.so
+
+ode.cmx: ode.ml ode.cmi
+	$(OCAMLOPT) -c $<
+
+ode.cmxa ode.a:  ode.cmx  dll_mlode_stubs.so
+	$(OCAMLOPT) -a  -o $@  $<  \
+	    -cclib -l_mlode_stubs \
+	    -cclib "`ode-config --libs`"
+
+doc: ode.ml ode.cmi
+	if [ ! -d doc ]; then mkdir doc ; fi
+	$(OCAMLDOC) -html -colorize-code -css-style _style.css -d doc $<
+	cp _style.css doc/
+
+
+DEMO=katamari
+demo: $(DEMO)
+$(DEMO): $(DEMO).ml ode.cmxa
+	$(OCAMLOPT) ode.cmxa $< -o $@  \
+	    -ccopt  -L./
 
 clean:
-	for d in . .profile; do (cd $$d; rm -f $(CLEANFILES)); done
+	rm -f *.[oa] *.so *.cm[ixoa] *.cmxa *.opt *~
 
-# Standard rules.
+clean-doc:
+	rm -f  doc/*.{html,css}
+	rmdir  doc/
 
-%.cmi: %.mli
-	ocamlfind ocamlc $(OCAMLCFLAGS) -package $(OCAMLPACKAGES) -c $<
+# install 
 
-%.cmo: %.ml
-	ocamlfind ocamlc $(OCAMLCFLAGS) -package $(OCAMLPACKAGES) -c $<
+PREFIX = "`$(OCAMLC) -where`/ode"
 
-%.cmx: %.ml
-	ocamlfind ocamlopt $(OCAMLOPTFLAGS) -package $(OCAMLPACKAGES) -c $<
+DIST_FILES=\
+    ode.cmi       \
+    ode.cma       \
+    ode.cmxa      \
+    ode.cmx       \
+    ode.a         \
+    lib_mlode_stubs.a
 
-.SUFFIXES: .mli .ml .cmi .cmo .cmx
+SO_DIST_FILES=\
+    dll_mlode_stubs.so
 
-# Build dependencies.
 
-ifeq ($(wildcard .depend),.depend)
-include .depend
-endif
+install: $(DIST_FILES)  $(SO_DIST_FILES)
+	if [ ! -d $(PREFIX) ]; then install -d $(PREFIX) ; fi
 
-depend: .depend
+	install -m 0755  \
+	        $(SO_DIST_FILES)  \
+	        $(PREFIX)/
 
-.depend: $(wildcard *.mli) $(wildcard *.ml)
-	$(OCAMLDEP) $^ > .depend
+	install -m 0644        \
+	        $(DIST_FILES)  \
+	        META           \
+	        $(PREFIX)/
 
-# Distribution.
+uninstall:
+	rm -i  $(PREFIX)/*
+	rmdir  $(PREFIX)/
 
-dist:
-	$(MAKE) check-manifest
-	rm -rf $(PACKAGE)-$(VERSION)
-	mkdir $(PACKAGE)-$(VERSION)
-	tar -cf - -T MANIFEST | tar -C $(PACKAGE)-$(VERSION) -xf -
-	tar zcf $(PACKAGE)-$(VERSION).tar.gz $(PACKAGE)-$(VERSION)
-	rm -rf $(PACKAGE)-$(VERSION)
-	ls -l $(PACKAGE)-$(VERSION).tar.gz
 
-check-manifest:
-	@for d in `find -type d -name CVS | grep -v '^\./debian/'`; \
-	do \
-	b=`dirname $$d`/; \
-	awk -F/ '$$1 != "D" {print $$2}' $$d/Entries | \
-	sed -e "s|^|$$b|" -e "s|^\./||"; \
-	done | sort > .check-manifest; \
-	sort MANIFEST > .orig-manifest; \
-	diff -u .orig-manifest .check-manifest; rv=$$?; \
-	rm -f .orig-manifest .check-manifest; \
-	exit $$rv
+# findlib install 
 
-.PHONY: depend dist check-manifest
+install_findlib:  $(DIST_FILES)  $(SO_DIST_FILES) META
+	ocamlfind install ode $^
+
+uninstall_findlib:  $(DIST_FILES)  $(SO_DIST_FILES) META
+	ocamlfind remove ode
+
+# tar-ball
+
+VERSION=0.5-r3
+R_DIR=ocamlode-$(VERSION)
+TARBALL=$(R_DIR).tar.gz
+
+DIST_FILES := ode.ml ode_c.c katamari.ml Makefile Makefile.orig \
+              README.txt CHANGES.txt META _style.css simple.ml
+
+DEMO_FILES := LICENSE_BSD.txt \
+              demo_exec.sh demo_opt.make drawstuff.ml drawstuff.make \
+              demo_plane2d.ml  demo_chain2.ml  demo_buggy.ml \
+              demo_basket.ml  demo_friction.ml  demo_feedback.ml \
+              demo_I.ml  demo_cylvssphere.ml  demo_boxstack.ml
+
+dist: $(TARBALL)
+
+LICENSE_GPL.txt:
+	wget http://www.gnu.org/licenses/gpl-3.0.txt
+	mv gpl-3.0.txt $@
+
+LICENSE_LGPL.txt:
+	wget http://www.gnu.org/licenses/lgpl.txt
+	mv lgpl.txt $@
+
+$(R_DIR): LICENSE_GPL.txt LICENSE_LGPL.txt  $(DIST_FILES)
+	mkdir -p $(R_DIR)
+	mv -f LICENSE_GPL.txt  $(R_DIR)/
+	mv -f LICENSE_LGPL.txt $(R_DIR)/
+	cp -f  $(DIST_FILES)   $(R_DIR)/
+	cp -f  $(DEMO_FILES)   $(R_DIR)/
+	cp -f  ask_version.ml  $(R_DIR)/
+	cp -f  ode_version.ml  $(R_DIR)/
+	cp -f  ode_version.sh  $(R_DIR)/
+	sed -i $(R_DIR)/META -e "s:VERSION:$(VERSION):g"
+	ls -A $(R_DIR)/ > $(R_DIR)/MANIFEST
+
+$(TARBALL): $(R_DIR)
+	tar cf $(R_DIR).tar $(R_DIR)
+	gzip -9 $(R_DIR).tar
+	ls -lh  $(R_DIR).tar.gz
+
+#EOF
