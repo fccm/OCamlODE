@@ -26,14 +26,16 @@ open Ode.LowLevel
 (* let () = Gc.set { (Gc.get ()) with Gc.verbose = 0x1 + 0x2 + 0x10 } *)
 
 (* Get the command line parameters. *)
-let width, height = ref 320, ref 240	(* Default screen size. *)
-let seed = ref (-1)			(* Default random number seed. *)
+let width, height = ref 320, ref 240    (* Default screen size. *)
+let seed = ref (-1)                     (* Default random number seed. *)
+let bgcolor = ref "rgb(239,0,255)"      (* Default background color. *)
 
 let () =
   let argspec = [
     "-width", Arg.Set_int width, "Set screen or window width";
     "-height", Arg.Set_int height, "Set screen or window height";
     "-seed", Arg.Set_int seed, "Choose a specific random number seed";
+    "-bgcolor", Arg.Set_string bgcolor, "Default background color";
   ] in
   let usage =
     Filename.basename Sys.executable_name ^ " [-options]\n" ^
@@ -45,28 +47,38 @@ let width = !width
 let height = !height
 let seed = !seed
 
+let bg_r, bg_g, bg_b =
+  Scanf.sscanf !bgcolor "rgb(%d,%d,%d)"
+    (fun r g b ->
+       let r = (float r) /. 255.
+       and g = (float g) /. 255.
+       and b = (float b) /. 255. in
+       (r,g,b))
+
 let pi = 3.14159265358979323846
 
-let stepsize = 0.01			(* Stepsize for physics (in secs). *)
+let stepsize = 0.01                     (* Stepsize for physics (in secs). *)
 
-let initial = 0., 0., 1.		(* Initial position for katamari. *)
-let initial_radius = 0.2		(* Initial radius. *)
-let initial_density = 5.		(* Density of katamari. *)
+let initial = 0., 0., 1.                (* Initial position for katamari. *)
+let initial_radius = 0.2                (* Initial radius. *)
+let initial_density = 5.                (* Density of katamari. *)
 
-let camera = ref (3.*.pi/.2.)		(* Current camera angle, radians. *)
-let camera_dist = 2.			(* Camera distance from katamari. *)
+let camera = ref (3.*.pi/.2.)           (* Current camera angle, radians. *)
+let camera_dist = 2.                    (* Camera distance from katamari. *)
 
-let pick_up_factor = 20.		(* Can pick up boxes up to 1/factor
-					 * mass of total katamari. *)
+let pick_up_factor = 20.                (* Can pick up boxes up to 1/factor
+                                         * mass of total katamari. *)
 
-let ignore_factor = 5.			(* Length of time before ignoring a
-					 * box which has been picked up. *)
+let ignore_factor = 5.                  (* Length of time before ignoring a
+                                         * box which has been picked up. *)
 
 (* Current key state. *)
 let key_forward = ref false
 let key_backward = ref false
 let key_left = ref false
 let key_right = ref false
+
+let grown_factor = ref 100.
 
 (* "Physics time", counts in seconds starting at 0. *)
 let physics_time = ref 0.
@@ -98,9 +110,9 @@ let timer_start, timer_stop =
     match !timer with
       | None -> failwith "timer_stop called without timer_start"
       | Some (start, label) ->
-	  let now = Unix.gettimeofday () in
-	  printf "%s: %g seconds\n" label (now -. start);
-	  timer := None
+          let now = Unix.gettimeofday () in
+          printf "%s: %g seconds\n" label (now -. start);
+          timer := None
   in
   (timer_start, timer_stop)
 ;;
@@ -121,16 +133,16 @@ let create_katamari ode space =
 
 type enabled_box = {
   b_box : box;
-  b_body : dBodyID;			(* Body. *)
+  b_body : dBodyID;                     (* Body. *)
 }
 and box = {
-  b_size : float * float * float;	(* Length of each side. *)
-  b_mass : float;			(* Mass (when embodied). *)
-  b_geom : dGeomID;			(* Geom. *)
+  b_size : float * float * float;       (* Length of each side. *)
+  b_mass : float;                       (* Mass (when embodied). *)
+  b_geom : box_geom dGeomID;            (* Geom. *)
   (* For picked boxes, this points to the transform geom.  In other
    * boxes, it is the same as b_geom.
    *)
-  b_tgeom : dGeomID;
+  b_tgeom : geom_type;
   (* For picked boxes, this is the time until we ignore the box, which
    * is calculated depending on the relative mass of the box.  In other
    * boxes, it is undefined.
@@ -147,7 +159,7 @@ module BodyBoxMap =
 module GeomBoxMap =
   Map.Make
     (struct
-       type t = dGeomID
+       type t = geom_type
        let compare = compare
      end)
 
@@ -168,15 +180,15 @@ let rec create_boxes ode space =
     let mass = lx *. ly *. lz *. density in
 
     let box = { b_size = (lx, ly, lz); b_mass = mass;
-		b_geom = geom; b_tgeom = geom; b_time = 0. } in
-    boxes := GeomBoxMap.add geom box !boxes
+                b_geom = geom; b_tgeom = Box_geom geom; b_time = 0. } in
+    boxes := GeomBoxMap.add (Box_geom geom) box !boxes
   in
   List.iter (
     fun scale ->
       for i = -10 to 10; do
-	let y = scale *. 10. in
-	let x = float i *. y in
-	create_box scale y x
+        let y = scale *. 10. in
+        let x = float i *. y in
+        create_box scale y x
       done
   ) [ 0.05; 0.1; 0.5; 1.0; 2.0; 5.0 ];
 
@@ -189,7 +201,7 @@ and enable_boxes ode large_boxes enabled_boxes max_mass =
    *)
   let boxes_to_enable =
     GeomBoxMap.fold (fun _ box boxes ->
-		       if box.b_mass <= max_mass then box :: boxes else boxes)
+                       if box.b_mass <= max_mass then box :: boxes else boxes)
       large_boxes [] in
 
   (* enable_box function below will move boxes from the large_boxes map
@@ -206,6 +218,7 @@ and enable_boxes ode large_boxes enabled_boxes max_mass =
     let lx, ly, lz = box.b_size in
     dMassSetBoxTotal mass ~total_mass:box.b_mass ~lx ~ly ~lz;
     let b_mass = dMass_mass mass in
+    ignore(b_mass);
     dBodySetMass body mass;
 
     let { x = x; y = y; z = z } = dGeomGetPosition box.b_geom in
@@ -213,7 +226,7 @@ and enable_boxes ode large_boxes enabled_boxes max_mass =
     dGeomSetPosition box.b_geom ~x ~y ~z;
 
     let enabled_box = { b_box = box; b_body = body } in
-    large_boxes := GeomBoxMap.remove box.b_geom !large_boxes;
+    large_boxes := GeomBoxMap.remove (Box_geom box.b_geom) !large_boxes;
     enabled_boxes := BodyBoxMap.add body enabled_box !enabled_boxes
   in
   List.iter enable_box boxes_to_enable;
@@ -221,7 +234,6 @@ and enable_boxes ode large_boxes enabled_boxes max_mass =
   !large_boxes, !enabled_boxes
 
 let init_gl () =
-  let bg_r, bg_g, bg_b = 0.9375, 0., 1. in
   GlDraw.viewport ~x:0 ~y:0 ~w:width ~h:height;
   GlClear.color (bg_r, bg_g, bg_b);
   GlClear.depth 1.0;
@@ -254,12 +266,12 @@ let init_gl () =
 
 (* The game state, used both for drawing and for physics. *)
 type state = {
-  ode : dWorldID;			(* The rigid body world. *)
-  space : dSpaceID;			(* Collision-detection world. *)
-  plane : dGeomID;			(* Ground plane. *)
+  ode : dWorldID;                       (* The rigid body world. *)
+  space : dSpaceID;                     (* Collision-detection world. *)
+  plane : plane_geom dGeomID;           (* Ground plane. *)
 
-  kata_geom : dGeomID;			(* Katamari geom. *)
-  kata_body : dBodyID;			(* Katamari body. *)
+  kata_geom : sphere_geom dGeomID;      (* Katamari geom. *)
+  kata_body : dBodyID;                  (* Katamari body. *)
 
   (* Boxes (ie. the stuff you're supposed to pick up) exist in four
    * different states, which they transition between.  large -> enabled
@@ -277,10 +289,10 @@ type state = {
    * Each box must be in exactly one state, and this is reflected by
    * which of the following structures they are contained in.
    *)
-  large_boxes : box GeomBoxMap.t;	(* dGeomID -> box *)
+  large_boxes : box GeomBoxMap.t;           (* dGeomID -> box *)
   enabled_boxes : enabled_box BodyBoxMap.t; (* dBody ID -> enabled box *)
-  picked_boxes : box GeomBoxMap.t;	(* dGeomID -> box *)
-  ignored_boxes : box GeomBoxMap.t;	(* dGeomID -> box *)
+  picked_boxes : box GeomBoxMap.t;          (* dGeomID -> box *)
+  ignored_boxes : box GeomBoxMap.t;         (* dGeomID -> box *)
 }
 
 let draw_scene st =
@@ -293,20 +305,21 @@ let draw_scene st =
   let pos = dBodyGetPosition st.kata_body in
   let vel = dBodyGetLinearVel st.kata_body in
   let radius = dGeomSphereGetRadius st.kata_geom in
+  ignore(vel);
 
   (* Camera. *)
   let () =
     let angle = !camera in
     let eye =
       { x = pos.x +. camera_dist *. cos angle;
-	y = pos.y +. camera_dist *. sin angle;
-	z = pos.z +. radius +. 0.03;
-	w = 0. } in
+        y = pos.y +. camera_dist *. sin angle;
+        z = pos.z +. radius +. 0.03;
+        w = 0. } in
     let up =
       let up = { x = 0.; y = 0.; z = 1.; w = 0. } in
       let cam =
-	{ x = eye.x -. pos.x; y = eye.y -. pos.y; z = eye.z -. pos.z;
-	  w = 0. } in
+        { x = eye.x -. pos.x; y = eye.y -. pos.y; z = eye.z -. pos.z;
+          w = 0. } in
       (* Vector b will be perpendicular to the up vector and the vector
        * shooting out from the camera.
        *)
@@ -368,7 +381,7 @@ let draw_scene st =
     let geom = box.b_geom in
     (* let r = dGeomGetRotation st.kata_geom in -- same as above *)
     let { x = x; y = y; z = z } =
-      dGeomGetPosition geom in		(* Relative to katamari centre. *)
+      dGeomGetPosition geom in          (* Relative to katamari centre. *)
     let { x = x; y = y; z = z } =
       dBodyGetRelPointPos st.kata_body ~px:x ~py:y ~pz:z in
     let matrix = [|
@@ -388,10 +401,10 @@ let draw_scene st =
   in
   let col = ( 1., 1., 1. ) in
   GeomBoxMap.iter (fun _ box ->
-		     draw_box col box) st.picked_boxes;
+                     draw_box col box) st.picked_boxes;
   let col = ( 0., 1., 1. ) in
   GeomBoxMap.iter (fun _ box ->
-		     draw_box col box) st.ignored_boxes
+                     draw_box col box) st.ignored_boxes
 
 (* Surface parameters used for all contact points. *)
 let surface_params = {
@@ -416,38 +429,41 @@ type class_t =
   | IsGround
   | IsScenery
 
+let generic_geom (geom : 'a dGeomID) =
+  (Obj.magic geom : 'b dGeomID)
+
 (* Classify each geom/body. *)
 let classify st geom body =
   (* Most collisions are with the ground, so test this first. *)
-  if geom = st.plane then
+  if (generic_geom geom) = st.plane then
     IsGround
-  else if geom = st.kata_geom then
+  else if (generic_geom geom) = st.kata_geom then
     IsKatamari
   else
     try
       (match body with
-	 | None -> raise Not_found
-	 | Some body ->
-	     let box = BodyBoxMap.find body st.enabled_boxes in
-	     IsEnabledBox box
+         | None -> raise Not_found
+         | Some body ->
+             let box = BodyBoxMap.find body st.enabled_boxes in
+             IsEnabledBox box
       )
     with
-	Not_found ->
-	  try
-	    let box = GeomBoxMap.find geom st.large_boxes in
-	    IsLargeBox box
-	  with
-	      Not_found ->
-		try
-		  let box = GeomBoxMap.find geom st.picked_boxes in
-		  IsPickedBox box
-		with
-		    Not_found ->
-		      try
-			let box = GeomBoxMap.find geom st.ignored_boxes in
-			IsIgnoredBox box
-		      with
-			  Not_found -> IsScenery
+        Not_found ->
+          try
+            let box = GeomBoxMap.find (Box_geom geom) st.large_boxes in
+            IsLargeBox box
+          with
+              Not_found ->
+                try
+                  let box = GeomBoxMap.find (Box_geom geom) st.picked_boxes in
+                  IsPickedBox box
+                with
+                    Not_found ->
+                      try
+                        let box = GeomBoxMap.find (Box_geom geom) st.ignored_boxes in
+                        IsIgnoredBox box
+                      with
+                          Not_found -> IsScenery
 
 (* Pick up a box.  This updates the state. *)
 let pick_up_box st box =
@@ -474,22 +490,27 @@ let pick_up_box st box =
 
   (* Adjust the mass of the katamari. *)
   let mass = dBodyGetMass st.kata_body in (* Current mass of katamari. *)
-  let mass' = dBodyGetMass orig_body in	(* Current mass of box. *)
-  dMassRotate mass' r;			(* Mass of box rotated. *)
-  dMassTranslate mass' ~x ~y ~z;	(* Mass of box translated. *)
-  dMassAdd mass mass';			(* Mass of katamari + box. *)
+  let mass' = dBodyGetMass orig_body in   (* Current mass of box. *)
+  (*
+  dMassRotate mass' r;                    (* Mass of box rotated. *)
+  dMassTranslate mass' ~x ~y ~z;          (* Mass of box translated. *)
+  *)
+  dMassAdd mass mass';                    (* Mass of katamari + box. *)
   dBodySetMass st.kata_body mass;
+  grown_factor := (dMass_mass mass) *. 790.;
+  Printf.printf "mass: %f\n%!" (dMass_mass mass);
 
   (* Calculate a time before this box gets ignored. *)
   (* XXX Should be longer for heavier or awkwardly shaped boxes. *)
   let time = !physics_time +. ignore_factor in
 
   (* New box structure. *)
-  let box = { box.b_box with b_geom = geom; b_tgeom = tgeom; b_time = time } in
+  let box = { box.b_box with
+              b_geom = geom; b_tgeom = GeomTransform_geom tgeom; b_time = time } in
 
   (* Move the box to the picked list. *)
   let enabled_boxes = BodyBoxMap.remove orig_body st.enabled_boxes in
-  let picked_boxes = GeomBoxMap.add tgeom box st.picked_boxes in
+  let picked_boxes = GeomBoxMap.add (GeomTransform_geom tgeom) box st.picked_boxes in
 
   (* This box is no longer an independent rigid body. *)
   dBodyDestroy orig_body;
@@ -515,24 +536,24 @@ let physics st to_time =
       let angle = pi +. !camera in
       let x = cos angle in
       let y = sin angle in
-      let fx = x *. stepsize *. 100. in
-      let fy = y *. stepsize *. 100. in
+      let fx = x *. stepsize *. !grown_factor in
+      let fy = y *. stepsize *. !grown_factor in
       if !key_forward then
-	dBodyAddForce st.kata_body ~fx ~fy ~fz:0.;
+        dBodyAddForce st.kata_body ~fx ~fy ~fz:0.;
       if !key_backward then
-	dBodyAddForce st.kata_body ~fx:(-.fx/.10.) ~fy:(-.fy/.10.) ~fz:0.;
+        dBodyAddForce st.kata_body ~fx:(-.fx/.10.) ~fy:(-.fy/.10.) ~fz:0.;
       if !key_left then
-	camera := !camera +. stepsize;
+        camera := !camera +. stepsize *. 1.2;
       if !key_right then
-	camera := !camera -. stepsize;
+        camera := !camera -. stepsize *. 1.2;
 
       (* When forwards/backwards NOT pressed, simulate a little natural
        * friction.
        *)
       if not !key_forward && not !key_backward then (
-	let vel = dBodyGetLinearVel st.kata_body in
-	let vel = vecscalarmul (-. 100. *. stepsize) vel in
-	dBodyAddForce st.kata_body ~fx:vel.x ~fy:vel.y ~fz:0.
+        let vel = dBodyGetLinearVel st.kata_body in
+        let vel = vecscalarmul (-. 100. *. stepsize) vel in
+        dBodyAddForce st.kata_body ~fx:vel.x ~fy:vel.y ~fz:0.
       ) in
 
     (*----- Collision detection. -----*)
@@ -543,7 +564,7 @@ let physics st to_time =
       (* geom1 and geom2 are close.  Test if they collide. *)
       let cs = dCollide geom1 geom2 ~max:4 in
       if Array.length cs > 0 then
-	contacts := (geom1, geom2, cs) :: !contacts
+        contacts := (geom1, geom2, cs) :: !contacts
     in
     dSpaceCollide st.space near;
 
@@ -558,78 +579,78 @@ let physics st to_time =
     let rec loop st = function
       | [] -> st
       | (geom1, geom2, contacts) :: rest ->
-	  (* Get the bodies (these might be None if colliding with large
-	   * boxes or other scenery).
-	   *)
-	  let body1 = dGeomGetBody geom1 in
-	  let body2 = dGeomGetBody geom2 in
+          (* Get the bodies (these might be None if colliding with large
+           * boxes or other scenery).
+           *)
+          let body1 = dGeomGetBody geom1 in
+          let body2 = dGeomGetBody geom2 in
 
-	  (* Classify each geom/body. *)
-	  let class1 = classify st geom1 body1 in
-	  let class2 = classify st geom2 body2 in
+          (* Classify each geom/body. *)
+          let class1 = classify st geom1 body1 in
+          let class2 = classify st geom2 body2 in
 
-	  (* Possible to pick something up? *)
-	  let st, rest =
-	    match class1, class2 with
-	      | IsIgnoredBox _, _
-	      | _, IsIgnoredBox _
-	      | IsKatamari, IsPickedBox _
-	      | IsPickedBox _, IsKatamari
-	      | IsPickedBox _, IsPickedBox _
-	      | IsGround, IsGround ->
-		  (* These sorts of collisions are uninteresting. *)
-		  st, rest
+          (* Possible to pick something up? *)
+          let st, rest =
+            match class1, class2 with
+              | IsIgnoredBox _, _
+              | _, IsIgnoredBox _
+              | IsKatamari, IsPickedBox _
+              | IsPickedBox _, IsKatamari
+              | IsPickedBox _, IsPickedBox _
+              | IsGround, IsGround ->
+                  (* These sorts of collisions are uninteresting. *)
+                  st, rest
 
-	      | IsKatamari, IsEnabledBox box
-	      | IsEnabledBox box, IsKatamari
-	      | IsPickedBox _, IsEnabledBox box
-	      | IsEnabledBox box, IsPickedBox _
-		  when box.b_box.b_mass *. pick_up_factor < kata_mass ->
-		  (* Pick it up - this updates the state because it
-		   * moves the box from the enabled list to the picked
-		   * list.
-		   *)
-		  let st = pick_up_box st box in
+              | IsKatamari, IsEnabledBox box
+              | IsEnabledBox box, IsKatamari
+              | IsPickedBox _, IsEnabledBox box
+              | IsEnabledBox box, IsPickedBox _
+                  when box.b_box.b_mass *. pick_up_factor < kata_mass ->
+                  (* Pick it up - this updates the state because it
+                   * moves the box from the enabled list to the picked
+                   * list.
+                   *)
+                  let st = pick_up_box st box in
 
-		  (* Remove the picked geom if it occurs later on in
-		   * the contact list.
-		   *)
-		  let geom_to_remove = box.b_box.b_geom in
-		  let rest = List.filter (
-		    fun (geom1, geom2, _) ->
-		      geom1 <> geom_to_remove &&
-			geom2 <> geom_to_remove
-		  ) rest in
+                  (* Remove the picked geom if it occurs later on in
+                   * the contact list.
+                   *)
+                  let geom_to_remove = box.b_box.b_geom in
+                  let rest = List.filter (
+                    fun (geom1, geom2, _) ->
+                      geom1 <> geom_to_remove &&
+                        geom2 <> geom_to_remove
+                  ) rest in
 
-		  st, rest
+                  st, rest
 
-	      | _ ->
-		  (* Just an ordinary collision. *)
-		  (* For each collision, create a contact joint. *)
-		  Array.iter (
-		    fun contact_geom ->
-		      incr nr_contacts;
+              | _ ->
+                  (* Just an ordinary collision. *)
+                  (* For each collision, create a contact joint. *)
+                  Array.iter (
+                    fun contact_geom ->
+                      incr nr_contacts;
 
-		      (* Create the contact joint. *)
-		      let contact = {
-			c_surface = surface_params;
-			c_geom = contact_geom;
-			c_fdir1 = { x = 0.; y = 0.; z = 0.; w = 0. }
-		      } in
-		      let joint =
-			dJointCreateContact st.ode
-			  (Some contact_joint_group) contact in
+                      (* Create the contact joint. *)
+                      let contact = {
+                        c_surface = surface_params;
+                        c_geom = contact_geom;
+                        c_fdir1 = { x = 0.; y = 0.; z = 0.; w = 0. }
+                      } in
+                      let joint =
+                        dJointCreateContact st.ode
+                          (Some contact_joint_group) contact in
 
-		      (* Attach that joint to the two bodies.  The
-		       * bodies may be 'None' indicating a collision with
-		       * the static world, but that's OK.
-		       *)
-		      dJointAttach joint body1 body2
-		  ) contacts;
+                      (* Attach that joint to the two bodies.  The
+                       * bodies may be 'None' indicating a collision with
+                       * the static world, but that's OK.
+                       *)
+                      dJointAttach joint body1 body2
+                  ) contacts;
 
-		  st, rest in
+                  st, rest in
 
-	  loop st rest
+          loop st rest
     in
     let st = loop st contacts in
 
@@ -645,13 +666,13 @@ let physics st to_time =
      *)
     let st =
       GeomBoxMap.fold (
-	fun geom box st ->
-	  if box.b_time <= !physics_time then
-	    (* Move to ignored list. *)
-	    { st with
-		picked_boxes = GeomBoxMap.remove geom st.picked_boxes;
-		ignored_boxes = GeomBoxMap.add geom box st.ignored_boxes }
-	  else st
+        fun geom box st ->
+          if box.b_time <= !physics_time then
+            (* Move to ignored list. *)
+            { st with
+                picked_boxes = GeomBoxMap.remove geom st.picked_boxes;
+                ignored_boxes = GeomBoxMap.add geom box st.ignored_boxes }
+          else st
       ) st.picked_boxes st in
 
     st
@@ -674,22 +695,22 @@ let read_events () =
   and do_event = function
     | Sdlevent.QUIT -> quit := true (* window closed: quit *)
     | Sdlevent.KEYDOWN ke ->
-	(match ke.Sdlevent.keysym with
-	   | Sdlkey.KEY_ESCAPE -> quit := true (* escape key: quit *)
-	   | Sdlkey.KEY_UP -> key_forward := true
-	   | Sdlkey.KEY_DOWN -> key_backward := true
-	   | Sdlkey.KEY_LEFT -> key_left := true
-	   | Sdlkey.KEY_RIGHT -> key_right := true
-	   | _ -> () (* ignore this key *)
-	)
+        (match ke.Sdlevent.keysym with
+           | Sdlkey.KEY_ESCAPE -> quit := true (* escape key: quit *)
+           | Sdlkey.KEY_UP -> key_forward := true
+           | Sdlkey.KEY_DOWN -> key_backward := true
+           | Sdlkey.KEY_LEFT -> key_left := true
+           | Sdlkey.KEY_RIGHT -> key_right := true
+           | _ -> () (* ignore this key *)
+        )
     | Sdlevent.KEYUP ke ->
-	(match ke.Sdlevent.keysym with
-	   | Sdlkey.KEY_UP -> key_forward := false
-	   | Sdlkey.KEY_DOWN -> key_backward := false
-	   | Sdlkey.KEY_LEFT -> key_left := false
-	   | Sdlkey.KEY_RIGHT -> key_right := false
-	   | _ -> () (* ignore this key *)
-	)
+        (match ke.Sdlevent.keysym with
+           | Sdlkey.KEY_UP -> key_forward := false
+           | Sdlkey.KEY_DOWN -> key_backward := false
+           | Sdlkey.KEY_LEFT -> key_left := false
+           | Sdlkey.KEY_RIGHT -> key_right := false
+           | _ -> () (* ignore this key *)
+        )
     | _ -> () (* ignore this event *)
   in
   read_events ();
@@ -705,6 +726,7 @@ let main () =
   Sdl.init [`VIDEO];
   Sdlgl.set_attr [];
   let surface = Sdlvideo.set_video_mode ~w:width ~h:height ~bpp:32 [`OPENGL] in
+  ignore(surface);
 
   (* Create the ODE world. *)
   let ode = dWorldCreate () in
@@ -734,14 +756,14 @@ let main () =
     enable_boxes ode large_boxes BodyBoxMap.empty max_mass in
 
   let st = { ode = ode;
-	     space = space;
-	     plane = plane;
-	     kata_geom = kata_geom;
-	     kata_body = kata_body;
-	     large_boxes = large_boxes;
-	     enabled_boxes = enabled_boxes;
-	     picked_boxes = GeomBoxMap.empty;
-	     ignored_boxes = GeomBoxMap.empty; } in
+             space = space;
+             plane = plane;
+             kata_geom = kata_geom;
+             kata_body = kata_body;
+             large_boxes = large_boxes;
+             enabled_boxes = enabled_boxes;
+             picked_boxes = GeomBoxMap.empty;
+             ignored_boxes = GeomBoxMap.empty; } in
 
   (* Initialise GL state. *)
   init_gl ();

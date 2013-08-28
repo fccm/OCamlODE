@@ -449,8 +449,17 @@ dJointParam_val (value paramv)
     case dSimpleSpaceClass:   ret = Val_int(10); break; \
     case dHashSpaceClass:     ret = Val_int(11); break; \
     case dQuadTreeSpaceClass: ret = Val_int(12); break; \
-    default: caml_failwith("unsupported geom class");   \
+    case dFirstUserClass:     ret = Val_int(13); break; \
+    case dLastUserClass:      ret = Val_int(14); break; \
+    default: caml_failwith("unhandled geom class"); \
   }
+/* DEBUG:
+    default: \
+      { char strbuf[64]; \
+        snprintf(strbuf, 64, "unhandled geom class: '%d'", geom_class); \
+        caml_failwith(strbuf); \
+      } \
+*/
 
 static const int geom_class_table[] = {
   dSphereClass,
@@ -466,7 +475,9 @@ static const int geom_class_table[] = {
   dSimpleSpaceClass,
   dHashSpaceClass,
   dQuadTreeSpaceClass,
-}; 
+  dFirstUserClass,
+  dLastUserClass,
+};
 
 #define dGeomClass_val(ret, geomclassv) \
   ret = geom_class_table[ Long_val(geomclassv) ]
@@ -496,7 +507,7 @@ static const int joint_type_table[] = {
 // than in the ode header
 #define Val_joint_type(joint_type)  Val_long(joint_type)
 
-// in case of a problem
+// in case of a problem, use this one:
 value inline __Val_joint_type (int joint_type)
 {
   switch (joint_type)
@@ -785,15 +796,58 @@ ocamlode_dWorldGetContactSurfaceLayer (value world)
   return caml_copy_double (dWorldGetContactSurfaceLayer (dWorldID_val (world)));
 }
 
+CAMLprim value
+ocamlode_dWorldSetAutoDisableLinearThreshold (value world, value linear_threshold)
+{
+  dWorldSetAutoDisableLinearThreshold (dWorldID_val (world), Double_val (linear_threshold));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dWorldGetAutoDisableLinearThreshold (value world)
+{
+  return caml_copy_double (dWorldGetAutoDisableLinearThreshold (dWorldID_val (world)));
+}
+
+CAMLprim value
+ocamlode_dWorldSetAutoDisableAngularThreshold (value world, value angular_threshold)
+{
+  dWorldSetAutoDisableAngularThreshold (dWorldID_val (world), Double_val (angular_threshold));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dWorldGetAutoDisableAngularThreshold (value world)
+{
+  return caml_copy_double (dWorldGetAutoDisableAngularThreshold (dWorldID_val (world)));
+}
+
 /*
- dReal dWorldGetAutoDisableLinearThreshold (dWorldID);
- void dWorldSetAutoDisableLinearThreshold (dWorldID, dReal linear_threshold);
- dReal dWorldGetAutoDisableAngularThreshold (dWorldID);
- void dWorldSetAutoDisableAngularThreshold (dWorldID, dReal angular_threshold);
- dReal dWorldGetAutoDisableLinearAverageThreshold (dWorldID);
- void dWorldSetAutoDisableLinearAverageThreshold (dWorldID, dReal linear_average_threshold);
- dReal dWorldGetAutoDisableAngularAverageThreshold (dWorldID);
- void dWorldSetAutoDisableAngularAverageThreshold (dWorldID, dReal angular_average_threshold);
+CAMLprim value
+ocamlode_dWorldSetAutoDisableLinearAverageThreshold (value world, value linear_average_threshold)
+{
+  dWorldSetAutoDisableLinearAverageThreshold (dWorldID_val(world), Double_val (linear_average_threshold));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dWorldGetAutoDisableLinearAverageThreshold (value world)
+{
+  return caml_copy_double (dWorldGetAutoDisableLinearAverageThreshold (dWorldID_val(world)));
+}
+
+CAMLprim value
+ocamlode_dWorldSetAutoDisableAngularAverageThreshold (value world, value angular_average_threshold)
+{
+  dWorldSetAutoDisableAngularAverageThreshold (dWorldID_val(world), Double_val (angular_average_threshold));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dWorldGetAutoDisableAngularAverageThreshold (value world)
+{
+  return caml_copy_double (dWorldGetAutoDisableAngularAverageThreshold (dWorldID_val (world)));
+}
 */
 
 CAMLprim value
@@ -809,11 +863,31 @@ ocamlode_dWorldGetAutoDisableAverageSamplesCount (value world)
   return Val_int (dWorldGetAutoDisableAverageSamplesCount (dWorldID_val (world)));
 }
 
-// void dWorldSetAutoDisableSteps (dWorldID, int steps);
-// int dWorldGetAutoDisableSteps (dWorldID);
+CAMLprim value
+ocamlode_dWorldSetAutoDisableSteps (value world, value steps)
+{
+  dWorldSetAutoDisableSteps (dWorldID_val (world), Int_val (steps));
+  return Val_unit;
+}
 
-// void dWorldSetAutoDisableTime (dWorldID, dReal time);
-// dReal dWorldGetAutoDisableTime (dWorldID);
+CAMLprim value
+ocamlode_dWorldGetAutoDisableSteps (value world)
+{
+  return Val_int (dWorldGetAutoDisableSteps (dWorldID_val (world)));
+}
+
+CAMLprim value
+ocamlode_dWorldSetAutoDisableTime (value world, value time)
+{
+  dWorldSetAutoDisableTime (dWorldID_val (world), Double_val (time));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dWorldGetAutoDisableTime (value world)
+{
+  return caml_copy_double (dWorldGetAutoDisableTime (dWorldID_val (world)));
+}
 
 CAMLprim value
 ocamlode_dWorldSetAutoDisableFlag (value world, value do_auto_disable)
@@ -828,10 +902,18 @@ ocamlode_dWorldGetAutoDisableFlag (value world)
   return Val_bool (dWorldGetAutoDisableFlag (dWorldID_val (world)));
 }
 
-/*
- void dWorldSetQuickStepW (dWorldID, dReal over_relaxation);
- dReal dWorldGetQuickStepW (dWorldID);
-*/
+CAMLprim value
+ocamlode_dWorldSetQuickStepW (value world, value over_relaxation)
+{
+  dWorldSetQuickStepW (dWorldID_val (world), Double_val (over_relaxation));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dWorldGetQuickStepW (value world)
+{
+  return caml_copy_double (dWorldGetQuickStepW (dWorldID_val (world)));
+}
 
 CAMLprim value
 ocamlode_dWorldSetContactMaxCorrectingVel (value world, value vel)
@@ -1378,6 +1460,48 @@ ocamlode_dBodyGetFiniteRotationAxis (value body)
   return copy_dVector3 (result);
 }
 
+CAMLprim value
+ocamlode_dBodySetAutoDisableLinearThreshold (value body, value linear_average_threshold)
+{
+  dBodySetAutoDisableLinearThreshold (dBodyID_val (body), Double_val (linear_average_threshold));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dBodyGetAutoDisableLinearThreshold (value body)
+{
+  return caml_copy_double (dBodyGetAutoDisableLinearThreshold (dBodyID_val (body)));
+}
+
+CAMLprim value
+ocamlode_dBodySetAutoDisableAngularThreshold (value body, value angular_average_threshold)
+{
+  dBodySetAutoDisableAngularThreshold (dBodyID_val (body), Double_val (angular_average_threshold));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dBodyGetAutoDisableAngularThreshold (value body)
+{
+  return caml_copy_double (dBodyGetAutoDisableAngularThreshold (dBodyID_val (body)));
+}
+
+CAMLprim value
+ocamlode_dBodySetAutoDisableAverageSamplesCount (value body, value average_samples_count)
+{
+  dBodySetAutoDisableAverageSamplesCount (dBodyID_val (body), Int_val (average_samples_count));
+  return Val_unit;
+}
+
+CAMLprim value
+ocamlode_dBodyGetAutoDisableAverageSamplesCount (value body)
+{
+  int ret = dBodyGetAutoDisableAverageSamplesCount (dBodyID_val (body));
+  if (ret > Max_long)
+    caml_failwith("dBodyGetAutoDisableAverageSamplesCount: integer overflow");
+  return Val_int(ret);
+}
+
 /* OCaml integers are unboxed,
  * here it is set, and get back without convertions
  */
@@ -1395,13 +1519,6 @@ ocamlode_dBodyGetData (value body)
 }
 
 /*
- dReal dBodyGetAutoDisableLinearThreshold (dBodyID);
- void dBodySetAutoDisableLinearThreshold (dBodyID, dReal linear_average_threshold);
- dReal dBodyGetAutoDisableAngularThreshold (dBodyID);
- void dBodySetAutoDisableAngularThreshold (dBodyID, dReal angular_average_threshold);
- int dBodyGetAutoDisableAverageSamplesCount (dBodyID);
- void dBodySetAutoDisableAverageSamplesCount (dBodyID, unsigned int average_samples_count);
-
  void dBodySetAutoDisableDefaults (dBodyID);
 */
 
@@ -1812,7 +1929,8 @@ ocamlode_dJointSetHingeAnchor (value joint, value x, value y, value z)
 CAMLprim value
 ocamlode_dJointSetHingeAnchorDelta (value joint, value x, value y, value z, value ax, value ay, value az)
 {
-  dJointSetHingeAnchorDelta (dJointID_val (joint), Double_val (x), Double_val (y), Double_val (z), Double_val (ax), Double_val (ay), Double_val (az));
+  dJointSetHingeAnchorDelta (dJointID_val (joint), Double_val (x), Double_val (y), Double_val (z),
+                             Double_val (ax), Double_val (ay), Double_val (az));
   return Val_unit;
 }
 CAMLprim value
@@ -1839,7 +1957,8 @@ ocamlode_dJointAddHingeTorque (value joint, value torque)
 CAMLprim value
 ocamlode_dJointSetSliderAxisDelta (value joint, value x, value y, value z, value ax, value ay, value az)
 {
-  dJointSetSliderAxisDelta (dJointID_val (joint), Double_val (x), Double_val (y), Double_val (z), Double_val (ax), Double_val (ay), Double_val (az));
+  dJointSetSliderAxisDelta (dJointID_val (joint), Double_val (x), Double_val (y), Double_val (z),
+                            Double_val (ax), Double_val (ay), Double_val (az));
   return Val_unit;
 }
 CAMLprim value
@@ -2410,7 +2529,7 @@ ocamlode_dHashSpaceCreate (value parentv)
 
 CAMLprim value
 ocamlode_dQuadTreeSpaceCreate (value parentv,
-			       value centerv, value extentsv, value depthv)
+                               value centerv, value extentsv, value depthv)
 {
   CAMLparam4 (parentv, centerv, extentsv, depthv);
   dSpaceID parent;
@@ -3041,7 +3160,7 @@ CAMLprim value
 ocamlode_dGeomRaySet_native (value ray, value px, value py, value pz, value dx, value dy, value dz)
 {
   dGeomRaySet (dGeomID_val (ray), Double_val (px), Double_val (py), Double_val (pz),
-		                  Double_val (dx), Double_val (dy), Double_val (dz));
+                                  Double_val (dx), Double_val (dy), Double_val (dz));
   return Val_unit;
 }
 CAMLprim value
@@ -3217,7 +3336,7 @@ ocamlode_dCreateTriMesh_native (value parentv, value idv, value tri_cb, value ar
                0, 0, 0);
   /* TODO:     dTriCallback * Callback,
                dTriArrayCallback * ArrayCallback,
-	       dTriRayCallback * RayCallback); */
+               dTriRayCallback * RayCallback); */
 
   CAMLreturn (Val_dGeomID (id));
 }
@@ -3447,7 +3566,7 @@ ocamlode_dCreateConvex (value parentv, value convex_data)
   dGeomID id = dCreateConvex (parent,
                           d->planes, d->planecount,
                           d->points, d->pointcount,
-			  d->polygons);
+                          d->polygons);
 
   CAMLreturn (Val_dGeomID (id));
 }
@@ -3462,7 +3581,7 @@ ocamlode_dGeomSetConvex (value geom, value convex_data)
   dGeomSetConvex (dGeomID_val (geom),
                     d->planes, d->planecount,
                     d->points, d->pointcount,
-		    d->polygons);
+                    d->polygons);
 
   CAMLreturn (Val_unit);
 }
@@ -3515,7 +3634,7 @@ ocamlode_dCreateConvex (value parentv, value planesv, value pointsv, value polyg
   dGeomID id = dCreateConvex (parent,
                           _planes, (planecount/4),
                           _points, (pointcount/3),
-			  _polygons);
+                          _polygons);
 
   CAMLreturn (Val_dGeomID (id));
 }
@@ -4500,8 +4619,6 @@ typedef struct dStopwatch {
  void dClearUpperTriangle (dReal *A, int n);
 
  dReal dMaxDifferenceLowerTriangle (const dReal *A, const dReal *B, int n);
-
-
 
 
 

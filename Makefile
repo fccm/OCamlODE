@@ -134,12 +134,13 @@ uninstall_findlib:  $(DIST_FILES)  $(SO_DIST_FILES) META
 
 # tar-ball
 
-VERSION=0.5-r3
+VERSION=0.5-r4
 R_DIR=ocamlode-$(VERSION)
 TARBALL=$(R_DIR).tar.gz
 
-DIST_FILES := ode.ml ode_c.c katamari.ml Makefile Makefile.orig \
-              README.txt CHANGES.txt META _style.css simple.ml
+DIST_FILES := ode.ml  ode_c.c  Makefile  Makefile.orig \
+              katamari.ml  katamari.sh \
+              README.txt  CHANGES.txt  META  _style.css  simple.ml
 
 DEMO_FILES := LICENSE_BSD.txt \
               demo_exec.sh demo_opt.make drawstuff.ml drawstuff.make \
@@ -147,7 +148,7 @@ DEMO_FILES := LICENSE_BSD.txt \
               demo_basket.ml  demo_friction.ml  demo_feedback.ml \
               demo_I.ml  demo_cylvssphere.ml  demo_boxstack.ml
 
-dist: $(TARBALL)
+pack dist: $(TARBALL)
 
 LICENSE_GPL.txt:
 	wget http://www.gnu.org/licenses/gpl-3.0.txt

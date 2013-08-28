@@ -278,10 +278,31 @@ module LowLevel = struct
   external dWorldGetQuickStepNumIterations : dWorldID -> int = "ocamlode_dWorldGetQuickStepNumIterations"
   external dWorldSetContactSurfaceLayer : dWorldID -> depth:float -> unit = "ocamlode_dWorldSetContactSurfaceLayer"
   external dWorldGetContactSurfaceLayer : dWorldID -> float = "ocamlode_dWorldGetContactSurfaceLayer"
-  external dWorldSetAutoDisableAverageSamplesCount : dWorldID -> average_samples_count:int -> unit = "ocamlode_dWorldSetAutoDisableAverageSamplesCount"
+  external dWorldSetAutoDisableLinearThreshold : dWorldID -> linear_threshold:float -> unit
+      = "ocamlode_dWorldSetAutoDisableLinearThreshold"
+  external dWorldGetAutoDisableLinearThreshold : dWorldID -> float = "ocamlode_dWorldGetAutoDisableLinearThreshold"
+  external dWorldSetAutoDisableAngularThreshold : dWorldID -> angular_threshold:float -> unit
+      = "ocamlode_dWorldSetAutoDisableAngularThreshold"
+  external dWorldGetAutoDisableAngularThreshold : dWorldID -> float = "ocamlode_dWorldGetAutoDisableAngularThreshold"
+  (*
+  external dWorldSetAutoDisableLinearAverageThreshold : dWorldID -> linear_average_threshold:float -> unit
+      = "ocamlode_dWorldSetAutoDisableLinearAverageThreshold"
+  external dWorldGetAutoDisableLinearAverageThreshold : dWorldID -> float = "ocamlode_dWorldGetAutoDisableLinearAverageThreshold"
+  external dWorldSetAutoDisableAngularAverageThreshold : dWorldID -> angular_average_threshold:float -> unit
+      = "ocamlode_dWorldSetAutoDisableAngularAverageThreshold"
+  external dWorldGetAutoDisableAngularAverageThreshold : dWorldID -> float = "ocamlode_dWorldGetAutoDisableAngularAverageThreshold"
+  *)
+  external dWorldSetAutoDisableAverageSamplesCount : dWorldID -> average_samples_count:int -> unit
+      = "ocamlode_dWorldSetAutoDisableAverageSamplesCount"
   external dWorldGetAutoDisableAverageSamplesCount : dWorldID -> int = "ocamlode_dWorldGetAutoDisableAverageSamplesCount"
+  external dWorldSetAutoDisableSteps : dWorldID -> steps:int -> unit = "ocamlode_dWorldSetAutoDisableSteps"
+  external dWorldGetAutoDisableSteps : dWorldID -> int = "ocamlode_dWorldGetAutoDisableSteps"
+  external dWorldSetAutoDisableTime : dWorldID -> time:float -> unit = "ocamlode_dWorldSetAutoDisableTime"
+  external dWorldGetAutoDisableTime : dWorldID -> float = "ocamlode_dWorldGetAutoDisableTime"
   external dWorldSetAutoDisableFlag : dWorldID -> do_auto_disable:bool -> unit = "ocamlode_dWorldSetAutoDisableFlag"
   external dWorldGetAutoDisableFlag : dWorldID -> bool = "ocamlode_dWorldGetAutoDisableFlag"
+  external dWorldSetQuickStepW : dWorldID -> over_relaxation:float -> unit = "ocamlode_dWorldSetQuickStepW"
+  external dWorldGetQuickStepW : dWorldID -> float = "ocamlode_dWorldGetQuickStepW"
   external dWorldSetContactMaxCorrectingVel : dWorldID -> vel:float -> unit = "ocamlode_dWorldSetContactMaxCorrectingVel"
   external dWorldGetContactMaxCorrectingVel : dWorldID -> float = "ocamlode_dWorldGetContactMaxCorrectingVel"
 
@@ -350,6 +371,15 @@ module LowLevel = struct
   external dBodyGetFiniteRotationMode : dBodyID -> bool = "ocamlode_dBodyGetFiniteRotationMode"
   external dBodySetFiniteRotationAxis : dBodyID -> x:float -> y:float -> z:float -> unit = "ocamlode_dBodySetFiniteRotationAxis"
   external dBodyGetFiniteRotationAxis : dBodyID -> dVector3 = "ocamlode_dBodyGetFiniteRotationAxis"
+  external dBodySetAutoDisableLinearThreshold : dBodyID -> linear_average_threshold:float -> unit
+      = "ocamlode_dBodySetAutoDisableLinearThreshold"
+  external dBodyGetAutoDisableLinearThresholda : dBodyID -> float = "ocamlode_dBodyGetAutoDisableLinearThreshold"
+  external dBodySetAutoDisableAngularThreshold : dBodyID -> angular_average_threshold:float -> unit
+      = "ocamlode_dBodySetAutoDisableAngularThreshold"
+  external dBodyGetAutoDisableAngularThreshold : dBodyID -> float = "ocamlode_dBodyGetAutoDisableAngularThreshold"
+  external dBodySetAutoDisableAverageSamplesCount : dBodyID -> average_samples_count:int -> unit
+      = "ocamlode_dBodySetAutoDisableAverageSamplesCount"
+  external dBodyGetAutoDisableAverageSamplesCount: dBodyID -> int = "ocamlode_dBodyGetAutoDisableAverageSamplesCount"
 
   external dBodySetData : dBodyID -> int -> unit = "ocamlode_dBodySetData"
   external dBodyGetData : dBodyID -> int = "ocamlode_dBodyGetData"
@@ -568,6 +598,9 @@ module LowLevel = struct
     | FirstSpaceSimpleSpaceClass
     | HashSpaceClass
     | LastSpaceQuadTreeSpaceClass
+    (* *)
+    | FirstUserClass
+    | LastUserClass
 
   external dGeomGetClass : 'a dGeomID -> geom_class = "ocamlode_dGeomGetClass"
 
@@ -585,6 +618,7 @@ module LowLevel = struct
     | Heightfield_geom of heightfield_geom dGeomID
     (* below is alpha *)
     | Geom_is_space
+    | User_class
 
   let geom_kind (geom : 'a dGeomID) =
     match dGeomGetClass geom with
@@ -602,6 +636,9 @@ module LowLevel = struct
     | FirstSpaceSimpleSpaceClass  -> (Geom_is_space)
     | HashSpaceClass              -> (Geom_is_space)
     | LastSpaceQuadTreeSpaceClass -> (Geom_is_space)
+
+    | FirstUserClass -> (User_class)
+    | LastUserClass  -> (User_class)
     (*
     | _ -> failwith "Unknown Geom Class"
     *)
@@ -653,7 +690,8 @@ module LowLevel = struct
   external dGeomTriMeshGetData : trimesh_geom dGeomID -> dTriMeshDataID = "ocamlode_dGeomTriMeshGetData"
   external dGeomTriMeshGetTriMeshDataID : trimesh_geom dGeomID -> dTriMeshDataID = "ocamlode_dGeomTriMeshGetTriMeshDataID"
   external dGeomTriMeshDataUpdate : dTriMeshDataID -> unit = "ocamlode_dGeomTriMeshDataUpdate"
-  external dGeomTriMeshDataBuild : dTriMeshDataID -> vertices: float array -> indices: int array -> unit = "ocamlode_dGeomTriMeshDataBuildDouble"
+  external dGeomTriMeshDataBuild : dTriMeshDataID -> vertices: float array -> indices: int array -> unit
+      = "ocamlode_dGeomTriMeshDataBuildDouble"
   (** {b Important:} The vertices parameter is not copied for ODE's use so make sure that it is
       not garbage collected as long as it trimesh is still used.
       (The indices parameter's datas are copied to a buffer associated with the dTriMeshDataID,
@@ -700,7 +738,8 @@ module LowLevel = struct
   type dHeightfieldDataID
   external dGeomHeightfieldDataCreate: unit -> dHeightfieldDataID = "ocamlode_dGeomHeightfieldDataCreate"
   external dGeomHeightfieldDataDestroy: id:dHeightfieldDataID -> unit = "ocamlode_dGeomHeightfieldDataDestroy"
-  external dCreateHeightfield: dSpaceID option -> data:dHeightfieldDataID -> placeable:bool -> heightfield_geom dGeomID = "ocamlode_dCreateHeightfield"
+  external dCreateHeightfield: dSpaceID option -> data:dHeightfieldDataID -> placeable:bool -> heightfield_geom dGeomID
+      = "ocamlode_dCreateHeightfield"
   external dGeomHeightfieldDataBuild:
                 id:dHeightfieldDataID ->
                 height_data:float array ->
@@ -773,7 +812,9 @@ if ( ((g1.category_bits & g2.collide_bits) ||
 
   external dMassSetZero : dMass -> unit = "ocamlode_dMassSetZero"
 
-  external dMassSetParameters : dMass -> mass:float -> cgx:float -> cgy:float -> cgz:float -> i11:float -> i22:float -> i33:float -> i12:float -> i13:float -> i23:float -> unit = "ocamlode_dMassSetParameters_bc" "ocamlode_dMassSetParameters"
+  external dMassSetParameters : dMass -> mass:float -> cgx:float -> cgy:float -> cgz:float ->
+                i11:float -> i22:float -> i33:float -> i12:float -> i13:float -> i23:float -> unit
+      = "ocamlode_dMassSetParameters_bc" "ocamlode_dMassSetParameters"
 
   external dMassSetSphere : dMass -> density:float -> radius:float -> unit = "ocamlode_dMassSetSphere"
   external dMassSetSphereTotal : dMass -> total_mass:float -> radius:float -> unit = "ocamlode_dMassSetSphereTotal"
@@ -783,11 +824,15 @@ if ( ((g1.category_bits & g2.collide_bits) ||
 
   type direction = Dir_x | Dir_y | Dir_z
 
-  external dMassSetCapsule : dMass -> density:float -> direction:direction -> radius:float -> length:float -> unit = "ocamlode_dMassSetCapsule"
-  external dMassSetCapsuleTotal : dMass -> total_mass:float -> direction:direction -> radius:float -> length:float -> unit = "ocamlode_dMassSetCapsuleTotal"
+  external dMassSetCapsule : dMass -> density:float -> direction:direction -> radius:float -> length:float -> unit
+      = "ocamlode_dMassSetCapsule"
+  external dMassSetCapsuleTotal : dMass -> total_mass:float -> direction:direction -> radius:float -> length:float -> unit
+      = "ocamlode_dMassSetCapsuleTotal"
 
-  external dMassSetCylinder : dMass -> density:float -> direction:direction -> radius:float -> length:float -> unit = "ocamlode_dMassSetCylinder"
-  external dMassSetCylinderTotal : dMass -> total_mass:float -> direction:direction -> radius:float -> length:float -> unit = "ocamlode_dMassSetCylinderTotal"
+  external dMassSetCylinder : dMass -> density:float -> direction:direction -> radius:float -> length:float -> unit
+      = "ocamlode_dMassSetCylinder"
+  external dMassSetCylinderTotal : dMass -> total_mass:float -> direction:direction -> radius:float -> length:float -> unit
+      = "ocamlode_dMassSetCylinderTotal"
 
   external dMassSetTrimesh : dMass -> density:float -> trimesh_geom dGeomID -> unit = "ocamlode_dMassSetTrimesh"
   external dMassSetTrimeshTotal : dMass -> total_mass:float -> trimesh_geom dGeomID -> unit = "ocamlode_dMassSetTrimeshTotal"
@@ -815,7 +860,8 @@ if ( ((g1.category_bits & g2.collide_bits) ||
 
   (** {3 Misc} *)
 
-  external dWorldImpulseToForce : dWorldID -> stepsize:float -> ix:float -> iy:float -> iz:float -> dVector3 = "ocamlode_dWorldImpulseToForce"
+  external dWorldImpulseToForce : dWorldID -> stepsize:float -> ix:float -> iy:float -> iz:float -> dVector3
+      = "ocamlode_dWorldImpulseToForce"
   (*
   external dWorldExportDIF : dWorldID -> filename:string -> world_name:string -> unit = "ocamlode_dWorldExportDIF"
   *)

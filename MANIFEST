@@ -14,6 +14,7 @@ demo_plane2d.ml
 drawstuff.make
 drawstuff.ml
 katamari.ml
+katamari.sh
 LICENSE_BSD.txt
 LICENSE_GPL.txt
 LICENSE_LGPL.txt
