@@ -1,5 +1,5 @@
 (* Test the Plane2D constraint. *)
-(* Converted from C to OCaml by F. Monnier <fmonnier@linux-nantes.org> *)
+(* Converted from C to OCaml by Florent Monnier *)
 
 open Ode.LowLevel
 open Drawstuff

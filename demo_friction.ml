@@ -39,7 +39,7 @@
  to slide.
 *)
 
-(* OCaml version by F. Monnier <fmonnier@linux-nantes.org> *)
+(* Converted from C to OCaml by Florent Monnier *)
 
 open Ode.LowLevel
 open Drawstuff

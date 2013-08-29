@@ -18,7 +18,7 @@
  * LICENSE_LGPL.txt and LICENSE_BSD.txt for more details.
  *)
 
-(* WIP OCaml version by F. Monnier *)
+(* WIP OCaml version by Florent Monnier *)
 
 open Ode.LowLevel
 open Drawstuff

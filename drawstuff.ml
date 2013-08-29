@@ -1,6 +1,5 @@
 (* Small Drawing Library
  * Copyright (C) 2008  Florent Monnier
- * Contact:  <fmonnier@linux-nantes.org>          
  * Some part are borrowed from the ODE's Drawstuff lib.
  *
  * This program is free software: you can redistribute it and/or    

@@ -18,7 +18,7 @@
  * LICENSE_LGPL.txt and LICENSE_BSD.txt for more details.
  *)
 
-(* Converted from C to OCaml by F. Monnier <fmonnier@linux-nantes.org> *)
+(* Converted from C to OCaml by Florent Monnier *)
 
 (*
   buggy with suspension.

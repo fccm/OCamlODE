@@ -1,23 +1,14 @@
 (** OCaml bindings for the Open Dynamics Engine (ODE). *)
-(*  By Richard W.M. Jones <rich@annexia.org>
-    Maintainer: Florent Monnier <fmonnier@linux-nantes.org> *)
+(*  Originally written by Richard W.M. Jones
+    Maintained by Florent Monnier
 
-(*  This file is part of the ocaml-ode bindings.
- *
- *  OCaml-ODE is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Lesser General Public License as
- *  published by the Free Software Foundation, either version 3 of
- *  the License, or (at your option) any later version.
- *
- *  OCaml-ODE is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with OCaml-ODE.  If not, see:
- *  <http://www.gnu.org/licenses/>
- *)
+ This software is provided "AS-IS", without any express or implied warranty.
+ In no event will the authors be held liable for any damages arising from
+ the use of this software.
+
+ Permission is granted to anyone to use this software for any purpose,
+ including commercial applications, and to alter it and redistribute it
+ freely. *)
 
 module LowLevel = struct
 

@@ -1,7 +1,8 @@
 OCaml bindings for the Open Dynamics Engine (ODE).
-Copyright (C) 2005 Richard W.M. Jones <rich@annexia.org>
+Copyright (C) 2005 Richard W.M. Jones
 Copyright (C) 2008 Florent Monnier
-Current Maintainer : Florent Monnier <fmonnier@linux-nantes.org>
+Current Maintainer: Florent Monnier
+For contact informations run: `ocaml contact.ml`
 
 This is a set of bindings in OCaml for the Open Dynamics Engine (ODE;
 http://www.ode.org/).
@@ -9,9 +10,7 @@ http://www.ode.org/).
 License
 -------
 
-This library is distributed under the GNU Library General Public
-License with the special OCaml linking exception.
-The Katamari like game is licensed under the GNU GPL.
+This library is distributed under a restrictionless Zlib License.
 Most of the demos that come from the ODE sources can be used either
 along the terms of the GNU LGPL or the BSD license.
 

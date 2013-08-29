@@ -22,7 +22,7 @@
    Serves as a test for the sphere vs trimesh collider
    By Bram Stolk. *)
 
-(* Converted from C to OCaml by F. Monnier <fmonnier@linux-nantes.org> *)
+(* Converted from C to OCaml by Florent Monnier *)
 
 let usage() =
   print_endline "  Press the spacebar to reset the position of the ball.\n";

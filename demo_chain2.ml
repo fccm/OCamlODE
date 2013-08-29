@@ -17,7 +17,7 @@
  * LICENSE_LGPL.txt and LICENSE_BSD.txt for more details.
  *)
 
-(* OCaml version by F. Monnier <fmonnier@linux-nantes.org> *)
+(* Converted from C to OCaml by Florent Monnier *)
 
 open Ode
 open LowLevel

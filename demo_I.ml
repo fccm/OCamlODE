@@ -31,8 +31,7 @@
   typical errors for each test cycle are about 1e-5 ... 1e-4.
 *)
 
-(* Converted roughly from C to OCaml by F. Monnier <fmonnier@linux-nantes.org>
- *)
+(* Converted roughly from C to OCaml by Florent Monnier *)
 
 open Ode.LowLevel
 open Drawstuff
