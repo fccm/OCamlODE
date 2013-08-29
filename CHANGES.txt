@@ -14,3 +14,7 @@ ocamlode-0.5-r4
 ocamlode-0.6
 - 1 bugs corrected in ode_c.c in the function ocamlode_dPlaneSpace()
 - 1 correction in the demo file demo_I.ml
+
+ocamlode-0.6.2
+- switched the core bindings from LGPL to Zlib license
+- organise the files into a directory hierarchy src/ examples/

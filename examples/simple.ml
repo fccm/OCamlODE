@@ -13,7 +13,8 @@ As explained in the manual of ODE a typical simulation will proceed like this:
       - Apply forces to the bodies as necessary.
       - Adjust the joint parameters as necessary.
       - Call collision detection.
-      - Create a contact joint for every collision point, and put it in the contact joint group.
+      - Create a contact joint for every collision point,
+        and put it in the contact joint group.
       - Take a simulation step.
       - Remove all joints in the contact joint group.
   - Destroy the dynamics and collision worlds.
@@ -24,8 +25,8 @@ Here is how it looks like in OCaml with the most simple possible example:
 open Ode.LowLevel
 
 let () =
-  dInitODE();
-  let wrl = dWorldCreate() in
+  dInitODE ();
+  let wrl = dWorldCreate () in
   dWorldSetGravity wrl 0. 0. (-0.9);
   let space = dHashSpaceCreate None in
   let plane = dCreatePlane (Some space) 0. 0. 1. 0. in
@@ -34,7 +35,7 @@ let () =
   let (lx,ly,lz) = (1.,1.,1.) in
   let b = dBodyCreate wrl in
   dBodySetPosition b 0. 0. 1.;
-  let m = dMassCreate() in
+  let m = dMassCreate () in
   dMassSetBox m 2.4 lx ly lz;
   dMassAdjust m 1.0;
   dBodySetMass b m;
@@ -76,6 +77,6 @@ let () =
     dGeomDestroy plane;
     dSpaceDestroy space;
     dWorldDestroy wrl;
-    dCloseODE();
+    dCloseODE ();
 ;;
 

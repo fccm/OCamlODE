@@ -794,4 +794,5 @@ let main () =
   Gc.compact ()
 
 let () =
+  let _ = Glut.init [| |] in
   main ()

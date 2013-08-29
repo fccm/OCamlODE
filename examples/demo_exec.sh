@@ -25,7 +25,9 @@ else
       GL_PATH="+glMLite"
 fi
 
-#GL_PATH="/home/blue_prawn/Documents/prog/ocaml/GFX/glMLite/SRC"
+#GL_PATH="/home/blue_prawn/home/glMLite/SRC"
+
+ODE_PATH="../src"
 
 
 # build the libraries
@@ -56,6 +58,7 @@ do    # executes the demos in interpreted mode
       echo "# running '$demo'"
       ocaml \
          -I "$GL_PATH" \
+         -I "$ODE_PATH" \
          drawstuff.cma ode.cma \
          $demo
 done
