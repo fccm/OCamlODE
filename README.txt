@@ -10,7 +10,9 @@ http://www.ode.org/).
 License
 -------
 
-This library is distributed under a restrictionless Zlib License.
+This library is distributed under the Zlib License.
+http://opensource.org/licenses/Zlib
+
 Most of the demos that come from the ODE sources can be used either
 along the terms of the GNU LGPL or the BSD license.
 
