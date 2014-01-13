@@ -19,8 +19,8 @@ along the terms of the GNU LGPL or the BSD license.
 Impatients
 ----------
 
-For impatients, just run the script demo_exec.sh, it will compile
-everything and will execute the demos.
+For impatients, just run the script demo_exec.sh, it should compile
+everything and execute the demos.
 
 Notes on the style of bindings
 ------------------------------
