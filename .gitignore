@@ -1,0 +1,8 @@
+*.[oa]
+*.cm[ioxa]
+*.cmx[as]
+*.so
+*.swp
+*~
+ode.mli
+ode_version.h
