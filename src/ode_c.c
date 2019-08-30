@@ -739,26 +739,6 @@ ocamlode_dWorldQuickStep (value idv, value stepsizev)
 }
 
 CAMLprim value
-ocamlode_dWorldStepFast1 (value idv, value stepsize, value maxiterations)
-{
-  dWorldStepFast1 (dWorldID_val (idv), Double_val (stepsize), Int_val (maxiterations));
-  return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dWorldSetAutoEnableDepthSF1 (value world, value autodepth)
-{
-  dWorldSetAutoEnableDepthSF1 (dWorldID_val (world), Int_val (autodepth));
-  return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dWorldGetAutoEnableDepthSF1 (value world)
-{
-  return Val_int (dWorldGetAutoEnableDepthSF1(dWorldID_val (world)));
-}
-
-CAMLprim value
 ocamlode_dWorldSetQuickStepNumIterations( value worldv, value num )
 {
   CAMLparam2 (worldv, num);

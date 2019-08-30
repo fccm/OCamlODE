@@ -262,9 +262,6 @@ module LowLevel = struct
 
   external dWorldStep : dWorldID -> float -> unit = "ocamlode_dWorldStep"
   external dWorldQuickStep : dWorldID -> float -> unit = "ocamlode_dWorldQuickStep"
-  external dWorldStepFast1 : dWorldID -> stepsize:float -> maxiterations:int -> unit = "ocamlode_dWorldStepFast1"
-  external dWorldSetAutoEnableDepthSF1 : dWorldID -> int -> unit = "ocamlode_dWorldSetAutoEnableDepthSF1"
-  external dWorldGetAutoEnableDepthSF1 : dWorldID -> int = "ocamlode_dWorldGetAutoEnableDepthSF1"
   external dWorldSetQuickStepNumIterations : dWorldID -> num:int -> unit = "ocamlode_dWorldSetQuickStepNumIterations"
   external dWorldGetQuickStepNumIterations : dWorldID -> int = "ocamlode_dWorldGetQuickStepNumIterations"
   external dWorldSetContactSurfaceLayer : dWorldID -> depth:float -> unit = "ocamlode_dWorldSetContactSurfaceLayer"
