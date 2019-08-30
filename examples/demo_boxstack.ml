@@ -163,7 +163,7 @@ let command world space obj convex_data = fun cmd ->
 
   let m = dMassCreate() in
   
-  match Char.lowercase cmd with
+  match Char.lowercase_ascii cmd with
   | ' ' ->
       incr selected;
       if (!selected >= !num) then selected := 0;
