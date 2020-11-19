@@ -91,7 +91,7 @@ let inspect_joints hinges stress colors jfeedbacks =
         end;
       end;
     with
-      Failure "dJointGetBody: connection with the static environment" -> ()
+      Failure _ -> ()
   done;
 ;;
 
