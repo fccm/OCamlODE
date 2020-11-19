@@ -1,5 +1,5 @@
-GL_PATH="+glMLite"
-#GL_PATH="/home/blue_prawn/Documents/prog/ocaml/GFX/glMLite/SRC"
+#GL_PATH="+glMLite"
+GL_PATH="$(ocamlfind query glMLite)"
 
 .PHONY: all opt
 all: drawstuff.cma
@@ -10,9 +10,6 @@ drawstuff.cma: drawstuff.ml
 	    -I $(GL_PATH) GL.cma Glu.cma Glut.cma \
 	    -I ../src ode.cma \
 	    $<
-
-GL.cmx Glu.cmx Glut.cmx:
-	(cd $(GL_PATH); $(MAKE) GL.cmx Glu.cmx Glut.cmx)
 
 drawstuff.cmxa: drawstuff.ml
 	ocamlopt -a -o $@ \
