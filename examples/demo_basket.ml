@@ -39,7 +39,7 @@ open Drawstuff
 let radius = 0.14
 
 
-let is_nan f = (Pervasives.compare nan f) = 0 ;;
+let is_nan f = (Stdlib.compare nan f) = 0 ;;
 
 (* this is called by dSpaceCollide when two objects in space are
    potentially colliding. *)
