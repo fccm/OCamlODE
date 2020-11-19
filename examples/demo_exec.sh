@@ -2,30 +2,9 @@
 cd `dirname $0`
 
 
-# if the frontend lib (OpenGL) is not there,
-#  download and build it in the local directory
-TARBALL="glMLite-0.03.16.tgz"
-GLMLITE="http://www.linux-nantes.org/~fmonnier/OCaml/GL/download/$TARBALL"
-DIR="`basename $TARBALL .tgz`"
+opam install glMLite
 
-if [ ! -d `ocamlc -where`/glMLite ]
-#if [ "1" ]
-then
-      if [ ! -d $DIR/SRC/ ]
-      then  # download glMLite (once)
-            wget $GLMLITE
-            tar xzf $TARBALL
-      fi
-      cd $DIR/SRC/
-      # build only bytecode libs
-      make GL.cma Glu.cma Glut.cma
-      cd ../../
-      GL_PATH="$DIR/SRC"
-else
-      GL_PATH="+glMLite"
-fi
-
-#GL_PATH="/home/blue_prawn/home/glMLite/SRC"
+GL_PATH="$(ocamlfind query glMLite)"
 
 ODE_PATH="../src"
 
