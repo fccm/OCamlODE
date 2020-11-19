@@ -4,5 +4,6 @@
 *.so
 *.swp
 *~
+*.opt
 ode.mli
 ode_version.h
