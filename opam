@@ -1,0 +1,40 @@
+opam-version: "2.0"
+name: "ode"
+license: "Zlib"
+authors: [
+  "Richard W.M. Jones"
+  "Florent Monnier"
+]
+maintainer: "https://github.com/fccm/"
+homepage: "https://github.com/fccm/OCamlODE"
+bug-reports: "https://github.com/fccm/OCamlODE/issues"
+dev-repo: "git+https://github.com/fccm/OCamlODE.git"
+doc: "http://decapode314.free.fr/ocaml/ode/doc/"
+
+tags: [ "bindings" "physics" "dynamics" "engine" "3D" "cross-platform" ]
+synopsis: "Bindings to the ODE library (Open Dynamics Engine)"
+description: """
+An OCaml interface to the ODE Physics SDK.
+
+ODE homepage: https://www.ode.org/
+
+ODE is an open source, high performance library for simulating rigid body dynamics.
+It is fully featured, stable, mature and platform independent.
+It has advanced joint types and integrated collision detection with friction.
+ODE is useful for simulating vehicles, objects in virtual reality environments and
+virtual creatures.
+It is currently used in many computer games, 3D authoring tools and simulation tools.
+
+This version of the bindings is known to work with ODE version 0.16
+"""
+depends: [
+  "ocaml"
+  "ocamlfind" {build}
+  "conf-ode"
+]
+build: [
+  [make "-C" "src" "all"]
+]
+install: [
+  [make "-C" "src" "install_findlib"]
+]
