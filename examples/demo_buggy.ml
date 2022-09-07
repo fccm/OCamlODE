@@ -235,8 +235,10 @@ let () =
       dJointAttach joint (Some body.(0)) (Some body.(i+1));
       let a = dBodyGetPosition body.(i+1) in
       dJointSetHinge2Anchor joint a.x a.y a.z;
+      (*
       dJointSetHinge2Axis1 joint 0. 0. 1.;
       dJointSetHinge2Axis2 joint 0. 1. 0.;
+      *)
       (joint)
     )
   in

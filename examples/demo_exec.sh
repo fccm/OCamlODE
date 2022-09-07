@@ -35,7 +35,7 @@ fi
 for demo in $DEMOS
 do    # executes the demos in interpreted mode
       echo "# running '$demo'"
-      ocaml \
+      ocaml -w -6 \
          -I "$GL_PATH" \
          -I "$ODE_PATH" \
          drawstuff.cma ode.cma \

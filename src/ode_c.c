@@ -1957,20 +1957,6 @@ ocamlode_dJointSetHinge2Anchor (value joint, value x, value y, value z)
 }
 
 CAMLprim value
-ocamlode_dJointSetHinge2Axis1 (value joint, value x, value y, value z)
-{
-  dJointSetHinge2Axis1 (dJointID_val (joint), Double_val (x), Double_val (y), Double_val (z));
-  return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dJointSetHinge2Axis2 (value joint, value x, value y, value z)
-{
-  dJointSetHinge2Axis2 (dJointID_val (joint), Double_val (x), Double_val (y), Double_val (z));
-  return Val_unit;
-}
-
-CAMLprim value
 ocamlode_dJointAddHinge2Torques (value joint, value torque1, value torque2)
 {
   dJointAddHinge2Torques (dJointID_val (joint), Double_val (torque1), Double_val (torque2));
@@ -3158,27 +3144,6 @@ ocamlode_dGeomRayGet (value ray)
 }
 
 CAMLprim value
-ocamlode_dGeomRaySetParams (value idv, value FirstContact, value BackfaceCull)
-{
-  dGeomRaySetParams (dGeomID_val (idv), Bool_val (FirstContact), Bool_val (BackfaceCull));
-  return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dGeomRayGetParams (value idv)
-{
-  CAMLparam1 (idv);
-  CAMLlocal1 (rv);
-  dGeomID id = dGeomID_val (idv);
-  int FirstContact, BackfaceCull;
-  dGeomRayGetParams (id, &FirstContact, &BackfaceCull);
-  rv = caml_alloc(2, 0);
-  Store_field (rv, 0, Val_bool (FirstContact) );
-  Store_field (rv, 1, Val_bool (BackfaceCull) );
-  CAMLreturn (rv);
-}
-
-CAMLprim value
 ocamlode_dGeomRaySetClosestHit (value idv, value closestHit)
 {
   dGeomRaySetClosestHit (dGeomID_val (idv), Bool_val (closestHit));
@@ -3344,74 +3309,6 @@ ocamlode_dGeomTriMeshClearTCCache (value geom)
 {
   dGeomTriMeshClearTCCache (dGeomID_val (geom));
   return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dCreateGeomTransform (value parentv)
-{
-  CAMLparam1 (parentv);
-  dSpaceID parent;
-  if (parentv == Val_int (0))	/* None */
-    parent = 0;
-  else				/* Some parent */
-    parent = dSpaceID_val (Field (parentv, 0));
-  dGeomID id = dCreateGeomTransform (parent);
-  CAMLreturn (Val_dGeomID (id));
-}
-
-CAMLprim value
-ocamlode_dGeomTransformSetGeom (value idv, value geomv)
-{
-  CAMLparam2 (idv, geomv);
-  dGeomID id = dGeomID_val (idv);
-  dGeomID geom;
-  if (geomv == Val_int (0))
-    geom = 0;
-  else
-    geom = dGeomID_val (Field (geomv, 0));
-  dGeomTransformSetGeom (id, geom);
-  CAMLreturn (Val_unit);
-}
-
-CAMLprim value
-ocamlode_dGeomTransformGetGeom (value idv)
-{
-  CAMLparam1 (idv);
-  CAMLlocal1 (geomv);
-  dGeomID id = dGeomID_val (idv);
-  dGeomID geom = dGeomTransformGetGeom (id);
-  if (geom) {			/* Some geom */
-    geomv = caml_alloc (1, 0);
-    caml_modify (&Field (geomv, 0), Val_dGeomID (geom));
-  } else
-    caml_modify (&geomv, Val_int (0)); /* None */
-  CAMLreturn (geomv);
-}
-
-CAMLprim value
-ocamlode_dGeomTransformSetCleanup (value geom, value mode)
-{
-  dGeomTransformSetCleanup (dGeomID_val (geom), Long_val (mode));
-  return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dGeomTransformGetCleanup (value geom)
-{
-  return Val_bool (dGeomTransformGetCleanup (dGeomID_val (geom)));
-}
-
-CAMLprim value
-ocamlode_dGeomTransformSetInfo (value geom, value mode)
-{
-  dGeomTransformSetInfo (dGeomID_val (geom), Long_val (mode));
-  return Val_unit;
-}
-
-CAMLprim value
-ocamlode_dGeomTransformGetInfo (value geom)
-{
-  return Val_bool (dGeomTransformGetInfo (dGeomID_val (geom)));
 }
 
 

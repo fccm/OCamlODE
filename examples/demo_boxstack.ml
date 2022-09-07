@@ -455,7 +455,7 @@ let rec drawGeom g pos rot show_aabb color =
       dsDrawCylinder pos rot length radius color;
 
   | GeomTransform_geom g ->
-      let g2 = dGeomTransformGetGeom g in
+      let g2 = None (* dGeomTransformGetGeom g *) in
       begin match g2 with
       | None -> prerr_endline "Error: Empty GeomTransform"
       | Some g2 ->

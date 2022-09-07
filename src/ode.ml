@@ -437,8 +437,6 @@ module LowLevel = struct
   external dJointAddSliderForce: dJointID -> force:float -> unit = "ocamlode_dJointAddSliderForce"
 
   external dJointSetHinge2Anchor : dJointID -> x:float -> y:float -> z:float -> unit = "ocamlode_dJointSetHinge2Anchor"
-  external dJointSetHinge2Axis1 : dJointID -> x:float -> y:float -> z:float -> unit = "ocamlode_dJointSetHinge2Axis1"
-  external dJointSetHinge2Axis2 : dJointID -> x:float -> y:float -> z:float -> unit = "ocamlode_dJointSetHinge2Axis2"
   external dJointAddHinge2Torques : dJointID -> torque1:float -> torque2:float -> unit = "ocamlode_dJointAddHinge2Torques"
 
   external dJointSetUniversalAnchor : dJointID -> x:float -> y:float -> z:float -> unit = "ocamlode_dJointSetUniversalAnchor"
@@ -664,8 +662,6 @@ module LowLevel = struct
                             = "ocamlode_dGeomRaySet_bytecode"
                               "ocamlode_dGeomRaySet_native"
   external dGeomRayGet : ray_geom dGeomID -> (* start *) dVector3 * (* dir *) dVector3 = "ocamlode_dGeomRayGet"
-  external dGeomRaySetParams : ray_geom dGeomID -> first_contact:bool -> backface_cull:bool -> unit = "ocamlode_dGeomRaySetParams"
-  external dGeomRayGetParams : ray_geom dGeomID -> bool * bool = "ocamlode_dGeomRayGetParams"
   external dGeomRaySetClosestHit : ray_geom dGeomID -> closest_hit:bool -> unit = "ocamlode_dGeomRaySetClosestHit"
   external dGeomRayGetClosestHit : ray_geom dGeomID -> bool = "ocamlode_dGeomRayGetClosestHit"
 
@@ -696,14 +692,6 @@ module LowLevel = struct
   external dGeomTriMeshIsTCEnabled : trimesh_geom dGeomID -> geom_class -> bool = "ocamlode_dGeomTriMeshIsTCEnabled"
   external dGeomTriMeshClearTCCache : trimesh_geom dGeomID -> unit = "ocamlode_dGeomTriMeshClearTCCache"
 
-
-  external dCreateGeomTransform : dSpaceID option -> geomTransform_geom dGeomID = "ocamlode_dCreateGeomTransform"
-  external dGeomTransformSetGeom : geomTransform_geom dGeomID -> 'a dGeomID option -> unit = "ocamlode_dGeomTransformSetGeom"
-  external dGeomTransformGetGeom : geomTransform_geom dGeomID -> 'a dGeomID option = "ocamlode_dGeomTransformGetGeom"
-  external dGeomTransformSetCleanup : geomTransform_geom dGeomID -> cleanup:bool -> unit = "ocamlode_dGeomTransformSetCleanup"
-  external dGeomTransformGetCleanup : geomTransform_geom dGeomID -> bool = "ocamlode_dGeomTransformGetCleanup"
-  external dGeomTransformSetInfo : geomTransform_geom dGeomID -> cleanup:bool -> unit = "ocamlode_dGeomTransformSetInfo"
-  external dGeomTransformGetInfo : geomTransform_geom dGeomID -> bool = "ocamlode_dGeomTransformGetInfo"
 
   (*
   (* old version *)
@@ -859,7 +847,7 @@ if ( ((g1.category_bits & g2.collide_bits) ||
 
   (**/**)
 
-  let is_nan f = (Pervasives.compare nan f) = 0 ;;
+  let is_nan f = (Stdlib.compare nan f) = 0 ;;
   let dVALIDVEC3 v = not((is_nan v.x) || (is_nan v.y) || (is_nan v.z)) ;;
   let dVALIDVEC4 v = not((is_nan v.x) || (is_nan v.y) || (is_nan v.z) || (is_nan v.w)) ;;
 
