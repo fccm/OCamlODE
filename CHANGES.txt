@@ -18,3 +18,7 @@ ocamlode-0.6
 ocamlode-0.6.2
 - switched the core bindings from LGPL to Zlib license
 - organise the files into a directory hierarchy src/ examples/
+
+ocamlode-0.7
+- remove functions deprecated in ODE version 0.16
+
